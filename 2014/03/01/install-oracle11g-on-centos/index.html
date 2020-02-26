@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="Yang, zhouyang.me@gmail.com"><title>centos上安装oracle11g(xe) · F18</title><meta name="description" content="准备安装文件
+oracle11g(xe)的安装文件
+
+检查交换空间首先查看tmpfs大小，oracle11g(xe)的init.ora文件给出了最低要求，默认是1G，需要扩抽为2G。
+修改/etc/fstab文件： 找到: tmpfs /dev/shm tmpfs defaults 0 0 改成: "><meta name="keywords" content="Hexo,iOS,Linux,Python,Javascript,Nodejs"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><meta name="generator" content="Hexo 4.2.0"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">F18</a></h3><div class="description"><p>Yet, just another blog</p></div></div></div><ul class="social-links"></ul><div class="footer"><span>Theme by </span><a href="https://github.com/Ben02/hexo-theme-Anatole" target="_blank" rel="noopener"> Anatole </a><div class="by_farbox">Using <a href="https://hexo.io/zh-cn/" target="_blank">Hexo</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/about">关于</a></li><li><a href="/archives">归档</a></li><li><a href="/links">友链</a></li></div><div class="information"><div class="back_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li></div><div class="avatar"><img src="/images/favicon.png"></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>centos上安装oracle11g(xe)</a></h3></div><div class="post-content"><h2 id="准备安装文件"><a href="#准备安装文件" class="headerlink" title="准备安装文件"></a>准备安装文件</h2><ul>
+<li><a href="http://www.oracle.com/technetwork/database/database-technologies/express-edition/downloads/index.html" target="_blank" rel="noopener">oracle11g(xe)的安装文件</a></li>
+</ul>
+<h2 id="检查交换空间"><a href="#检查交换空间" class="headerlink" title="检查交换空间"></a>检查交换空间</h2><p>首先查看tmpfs大小，oracle11g(xe)的init.ora文件给出了最低要求，默认是1G，需要扩抽为2G。</p>
+<p>修改/etc/fstab文件： 找到: tmpfs /dev/shm tmpfs defaults 0 0 改成: tmpfs /dev/shm tmpfs defaults,size=2048M 0 0</p>
+<p>修改完成以后重新加载tmpfs:</p>
+<p>&gt; sudo umount /dev/shm<br>&gt; sudo mount /dev/shm</p>
+<p>查看是否生效:</p>
+<p>&gt; df -h /dev/shm</p>
+<h2 id="安装oracle11g-xe"><a href="#安装oracle11g-xe" class="headerlink" title="安装oracle11g(xe)"></a>安装oracle11g(xe)</h2><p>下载好的oracle11g(xe)安装文件名应该类似oracle-xe-11.2.0-1.0.x86_64.rpm.zip。</p>
+<p>首先解压：</p>
+<p>&gt; unzip -q oracle-xe-11.2.0-1.0.x86_64.rpm.zip</p>
+<p>使用rpm命令安装:</p>
+<p>&gt; cd Disk1<br>&gt; rpm -ivh oracle-xe-11.2.0-1.0.x86_64.rpm</p>
+<p>执行配置安装脚本：</p>
+<p>&gt; /etc/init.d/oracle-xe configure</p>
+<p>添加环境变量:</p>
+<p>&gt; cd /u01/app/oracle/product/11.2.0/xe/bin<br>&gt; . ./oracle_env.sh</p>
+<p>也可以直接吧环境变量脚本加入.bash_profile或者.bashrc:</p>
+<p>&gt; . /u01/app/oracle/product/11.2.0/xe/bin/oracle_env.sh</p>
+<h2 id="创建数据库"><a href="#创建数据库" class="headerlink" title="创建数据库"></a>创建数据库</h2><p>完成安装后可以使用默认的管理员账户登录，密码是在执行安装脚本时设定的密码:</p>
+<p>&gt; sqlplus /nolog<br>SQL &gt; conn sys/password as sysdba</p>
+<h3 id="配置远程GUI访问"><a href="#配置远程GUI访问" class="headerlink" title="配置远程GUI访问:"></a>配置远程GUI访问:</h3><p>使用sqlplus登录sys账户:</p>
+<p>SQL&gt; EXEC DBMS_XDB.SETLISTENERLOCALACCESS(FALSE);</p>
+<p>然后可以在下面网址管理数据库，登录用户仍然是sys/password:</p>
+<p><a href="http://localhost:8080/apex/f?p=4950:1" target="_blank" rel="noopener">http://localhost:8080/apex/f?p=4950:1</a></p>
+<h3 id="移动Flash-Recovery-Area的存储位置"><a href="#移动Flash-Recovery-Area的存储位置" class="headerlink" title="移动Flash Recovery Area的存储位置"></a>移动Flash Recovery Area的存储位置</h3><p>默认的路径应该在:</p>
+<p>/u01/app/oracle/fast_recovery_area</p>
+<p>可以使用下面命令查看Flash Recovery Area的相关参数:</p>
+<p>SQL&gt; show parameter DB_RECOVERY_FILE_DEST;</p>
+<p>为了防止磁盘故障的发生可以将快速的恢复区移动到其他磁盘上:</p>
+<p>&gt; mkdir /opt/fra<br>&gt; chown oracle:dba /opt/fra</p>
+<p>然后修改路径参数DB_RECOVERY_FILE_DEST:</p>
+<p>SQL&gt; ALTER SYSTEM SET DB_RECOVERY_FILE_DEST = ‘/opt/fra’;</p>
+<p>修改占用空间参数DB_RECOVERY_FILE_DEST_SIZE:</p>
+<p>SQL&gt; ALTER SYSTEM SET DB_RECOVERY_FILE_DEST_SIZE = 20G;</p>
+<h3 id="将数据库日志-Redo-Log-用户添加到组"><a href="#将数据库日志-Redo-Log-用户添加到组" class="headerlink" title="将数据库日志(Redo Log)用户添加到组"></a>将数据库日志(Redo Log)用户添加到组</h3><p>至少需要两个Redo Log组，并且每个组需要至少2个用户。此外，最好将用户分布在不同磁盘或者至少是不同目录下。</p>
+<p>查看数据库日志:</p>
+<p> SQL&gt; SELECT * FROM V$LOGFILE;</p>
+<p>添加两个Redo Log用户:</p>
+<p>SQL&gt; ALTER DATABASE ADD LOGFILE MEMBER ‘/u01/app/oracle/oradata/XE/log1b.LOG’ TO GROUP 1;</p>
+<p>Database altered.</p>
+<p>SQL&gt; ALTER DATABASE ADD LOGFILE MEMBER ‘/u01/app/oracle/oradata/XE/log2b.LOG’ TO GROUP 2;</p>
+<p>Database altered.</p>
+<h3 id="设定Sessions和Processes参数"><a href="#设定Sessions和Processes参数" class="headerlink" title="设定Sessions和Processes参数"></a>设定Sessions和Processes参数</h3><p>默认的session和processses参数都设置的比较低。</p>
+<p>查看默认session参数:</p>
+<p>SQL&gt; show parameters sessions;</p>
+<p>修改session参数:</p>
+<p>SQL&gt; alter system set sessions=250 scope=spfile;<br>System altered.</p>
+<p>查看默认processes参数:</p>
+<p>SQL&gt; show parameters prcessses;</p>
+<p>修改processes参数:</p>
+<p>SQL&gt; alter system set processes=200 scope=spfile;</p>
+<p>重启数据库后生效:</p>
+<p>SQL&gt; shutdown immediate<br>Database closed.<br>Database dismounted.<br>ORACLE instance shut down.<br>SQL&gt; startup<br>ORACLE instance started.</p>
+<h3 id="启用Archivelog模式"><a href="#启用Archivelog模式" class="headerlink" title="启用Archivelog模式"></a>启用Archivelog模式</h3><p>启用在线或者热备份，需要开启Archievelog模式。如果只使用冷备份话，只能回复数据到上一次的备份。</p>
+<p>启用Archievelog模式:</p>
+<p>SQL&gt; shutdown immediate<br>Database closed.<br>Database dismounted.<br>ORACLE instance shut down</p>
+<p>SQL&gt; startup mount<br>ORACLE instance started.</p>
+<p>SQL&gt; alter database archivelog;<br>Database altered.</p>
+<p>SQL&gt; alter database open;<br>Database altered.</p>
+<p>查看是否生效：</p>
+<p>SQL&gt; SELECT LOG_MODE FROM SYS.V$DATABASE;</p>
+<h3 id="创建在线备份"><a href="#创建在线备份" class="headerlink" title="创建在线备份"></a>创建在线备份</h3><p>可以修改在线备份的脚本：</p>
+<p>/u01/app/oracle/product/11.2.0/xe/config/scripts/backup.sh</p>
+<p>创建存储备份的目录：</p>
+<p>&gt; mkdir /opt/ora_backup</p>
+<p>修改目录权限:</p>
+<p>&gt; chown oracle:dba /opt/ora_backup</p>
+<p>拷贝脚本:</p>
+<p>&gt; cp  /u01/app/oracle/product/11.2.0/xe/config/scripts/backup.sh /opt/ora_backup/backup.sh</p>
+<p>修改脚本:</p>
+<p>&gt; vi /opt/ora_backup/backup.sh</p>
+<p>修改内容，将下面内容:</p>
+<p>else<br> echo Backup of the database succeeded.<br> echo Log file is at $rman_backup_current.<br>fi</p>
+<p>#Wait for user to press any key<br>echo -n “Press ENTER key to exit”<br>read userinp</p>
+<p>修改为:</p>
+<p>else<br> echo Backup of the database succeeded.<br> echo Log file is at $rman_backup_current.<br> mail -s ‘Oracle Backup Completed’ ‘your@email.com’ &lt; /u01/app/oracle/oxe_backup_current.log<br>fi</p>
+<p>#Wait for user to press any key<br>#echo -n “Press ENTER key to exit”<br>#read userinp</p>
+<p>这脚本备份完以后会给邮箱发送备份日志的邮件，可以使用cron执行脚本，执行用户应该为oracle。需要注意清理备份，防止FRA溢出。</p>
+<h3 id="常用SQL命令"><a href="#常用SQL命令" class="headerlink" title="常用SQL命令"></a>常用SQL命令</h3><p>新建表空间，空间名为test1:</p>
+<p>SQL&gt; create tablespace test1 datafile ‘/u01/app/oracle/ora_tables/test1.dbf’ size 50M;</p>
+<p>新建数据库用户(myuser), 并赋予权限:</p>
+<p>SQL&gt; create myuser reward identified by 123456 default tablespace test1;<br>SQL&gt; grant all privileges to myuser</p>
+<p>删除用户:</p>
+<p>SQL&gt; drop user xxx cascade;</p>
+<p>解锁用户(密码锁定):</p>
+<p>SQL&gt; ALTER USER “myuser” ACCOUNT UNLOCK;</p>
+<p>删除表空间:</p>
+<p>SQL&gt; DROP tablespace xxx INCLUDING CONTENTS;</p>
+<p>更新测试数据的ID和创建时间</p>
+<p>SQL&gt; update A_TABLE_NAME set id = rownum, create_time = TO_DATE(TRUNC(DBMS_RANDOM.VALUE(TO_NUMBER(TO_CHAR(SYSDATE - 180, ‘J’)), TO_NUMBER(TO_CHAR(SYSDATE, ‘J’)))),’J’);</p>
+<p><a href="/tag/oracle.html">oracle</a></p>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2014-03-01</span><i class="fa fa-tag"></i><a class="tag" href="/tags/macos/" title="macos">macos </a><a class="tag" href="/tags/oracle/" title="oracle">oracle </a></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/home?status=,http://f18.tech/2014/03/01/install-oracle11g-on-centos/,F18,centos上安装oracle11g(xe),;" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2014/03/20/php-on-mac/" title="OSX10.10上使用php">上一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

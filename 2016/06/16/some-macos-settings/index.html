@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="Yang, zhouyang.me@gmail.com"><title>osx笔记 · F18</title><meta name="description" content="Posted on 一 16 六月 2014
+mac系统开机进入命令行的方法开机按下command+s直到进入命令行。
+修复丢失用户密码无法进入系统的问题：
+&amp;gt; /sbin/mount -uaw&amp;gt; rm /var/db/.AppleSetupDone&amp;gt; reboot
+然后可以重新注"><meta name="keywords" content="Hexo,iOS,Linux,Python,Javascript,Nodejs"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><meta name="generator" content="Hexo 4.2.0"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">F18</a></h3><div class="description"><p>Yet, just another blog</p></div></div></div><ul class="social-links"></ul><div class="footer"><span>Theme by </span><a href="https://github.com/Ben02/hexo-theme-Anatole" target="_blank" rel="noopener"> Anatole </a><div class="by_farbox">Using <a href="https://hexo.io/zh-cn/" target="_blank">Hexo</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/about">关于</a></li><li><a href="/archives">归档</a></li><li><a href="/links">友链</a></li></div><div class="information"><div class="back_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li></div><div class="avatar"><img src="/images/favicon.png"></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>osx笔记</a></h3></div><div class="post-content"><p>Posted on 一 16 六月 2014</p>
+<h4 id="mac系统开机进入命令行的方法"><a href="#mac系统开机进入命令行的方法" class="headerlink" title="mac系统开机进入命令行的方法"></a>mac系统开机进入命令行的方法</h4><p>开机按下command+s直到进入命令行。</p>
+<p>修复丢失用户密码无法进入系统的问题：</p>
+<p>&gt; /sbin/mount -uaw<br>&gt; rm /var/db/.AppleSetupDone<br>&gt; reboot</p>
+<p>然后可以重新注册一个管理员用户登录后修改忘记密码用户的密码。</p>
+<h4 id="映射80端口访问到其他端口"><a href="#映射80端口访问到其他端口" class="headerlink" title="映射80端口访问到其他端口"></a>映射80端口访问到其他端口</h4><p>以80端口映射到8000端口为例</p>
+<p>&gt; sudo ipfw add fwd 127.0.0.1,8000 tcp from any to 127.0.0.1 80 in</p>
+<p>查看端口映射</p>
+<p>&gt; sudo ipfw list</p>
+<p>发现类似00100 fwd 127.0.0.1,8000 tcp from any to 127.0.0.1 dst-port 80 in表示已经映射成功</p>
+<p>删除某条映射规则</p>
+<p>&gt; sudo ipfw delete 00100</p>
+<p>清除所有映射规则</p>
+<p>&gt; sudo ipfw flush</p>
+<p>更新: 最新的yosemite已经移除了ipwf，可以用pf配置来实现端口映射</p>
+<p>Unfortunately, Yosemite breaks pow because ipfw has been completely removed from the OS. I was able to get pow working again using PF, which is the new recommended way to do port forwarding in OS X. Here’s what I did to get it working:</p>
+<p>First, add an anchor file to contain the pow port forwarding rule. Place the following code in /etc/pf.anchors/com.pow:</p>
+<p>rdr pass on lo0 inet proto tcp from any to any port 80 -&gt; 127.0.0.1 port 20559</p>
+<p>NOTE: The trailing line break is required. Otherwise pf will say you have a syntax error.</p>
+<p>Next, add two lines to /etc/pf.conf to load your new rule. It is important where these lines go. Add this line right after rdr-anchor “com.apple/*”:</p>
+<p>rdr-anchor “pow”<br>Add this line directly after load anchor “com.apple” from “/etc/pf.anchors/com.apple”:</p>
+<p>load anchor “pow” from “/etc/pf.anchors/com.pow”</p>
+<p>Again, make sure to maintain the final line break.</p>
+<p>Next, reload the rules into pf by running sudo pfctl -f /etc/pf.conf</p>
+<p>Finally, enable pf by running sudo pfctl -e</p>
+<p>Interested to hear how other people fare with this. I would provide a pull request but I’m not familiar with the internals of pow or the way this should be implemented.</p>
+<p><a href="https://github.com/basecamp/pow/issues/452" target="_blank" rel="noopener">原文链接</a></p>
+<p><a href="/tag/osx.html">osx</a></p>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2016-06-16</span><i class="fa fa-tag"></i><a class="tag" href="/tags/macos/" title="macos">macos </a></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/home?status=,http://f18.tech/2016/06/16/some-macos-settings/,F18,osx笔记,;" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2019/04/18/win10-startup-tools-on-macos/" title="macOS下制作win10启动盘">上一篇</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2014/05/01/using-git-svn/" title="使用git-svn">下一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>
